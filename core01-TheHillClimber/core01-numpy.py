@@ -1,12 +1,12 @@
 # The Hill Climber - https://www.reddit.com/r/ludobots/wiki/core01
 
-from __future__ import division
-
+import random
 from copy import deepcopy
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as fitnessPlot
 import matplotlib.pyplot as genePlot
+import numpy as np
 
 
 # Project Details:
@@ -22,30 +22,26 @@ import matplotlib.pyplot as genePlot
 # Python function MatrixCreate(rows, columns). This function should return a rows by columns matrix with all elements
 # set to zero. The vector we will use will actually be a 1 x 50 matrix. print MatrixCreate(1, 50) will show you whether
 # your function works correctly or not.
+
 def MatrixCreate(rows, columns):
-    matrix = [[0 for x in xrange(columns)] for y in xrange(rows)]
-    return matrix
+    return np.zeros(shape=(rows, columns))
 
 
 # print MatrixCreate(1, 50)
 
 # Create a function MatrixRandomize(v) that will put random values drawn from [0, 1] into each element of v. You'll need
 # to use random.random(), which returns a random floating- point value in [0, 1].
-import random
-
 
 def MatrixRandomize(v):
-    for row in xrange(len(v)):
-        for col in xrange(len(v[row])):
-            v[row][col] = random.random()
-
+    for x in np.nditer(v, op_flags=['readwrite']):
+        x[...] = random.random()
     return v
 
 
 # The hill climber must now compute the fitness of the random vector. Create a function Fitness(v) that returns the mean
 # value of all of the elements in v.
 def Fitness(v):
-    return sum(map(sum, v)) / (len(v) * len(v[0]))
+    return np.mean(v)
 
 
 # The hill climber must now create a modified copy of v. Create a function MatrixPerturb(p, prob) which makes a copy of
@@ -55,45 +51,49 @@ def Fitness(v):
 # with a given probability using an if statement: if prob > random.random():.
 def MatrixPerturb(p, prob):
     c = deepcopy(p)
-    for row in xrange(len(c)):
-        for col in xrange(len(c[row])):
-            if prob > random.random():
-                c[row][col] = random.random()
+    for x in np.nditer(c, op_flags=['readwrite']):
+        if prob > random.random():
+            x[...] = random.random()
 
     return c
 
 
 # You can now use all of these functions to create a serial hill climber:
 # You should see that as the fitness of parent is printed, the fitness value goes up as the generations pass.
-def randomHillClimber():
-    parent = MatrixCreate(1, 50)  # 1,50
+def SerialHillClimber():
+    fits = MatrixCreate(1, 5000)
+
+    parent = MatrixCreate(1, 50)
     parent = MatrixRandomize(parent)
     parentFitness = Fitness(parent)
 
-    fits = MatrixCreate(1, 5000)
+    # Create a matrix Genes with 5000 columns and 50 rows. After each generation j of the hill climber, copy each element of
+    # the parent vector into the jth column of Genes. After the hill climber has run, print Genes to ensure the elements
+    # were stored correctly.
     Genes = MatrixCreate(50, 5000)
 
     for currentGeneration in range(5000):
-        # print currentGeneration, parentFitness
-        for i in xrange(len(parent[0])):
-            Genes[i][currentGeneration] = parent[0][i]
-
         fits[0][currentGeneration] = parentFitness
+        # print currentGeneration, parentFitness
         child = MatrixPerturb(parent, 0.05)
         childFitness = Fitness(child)
         if childFitness > parentFitness:
             parent = child
             parentFitness = childFitness
 
+        for idx, val in enumerate(parent[0]):
+            Genes[idx][currentGeneration] = val
+
+    # The matplotlib function imshow(M) will print a matrix M as an image, where each pixel pij corresponds to element eij
+    # in M . Calling imshow(Genes, cmap=cm.gray, aspect='auto', interpolation='nearest') after the hill climber has
+    # terminated will produce a figure similar to that of Fig. 1c. (Note that you still have to call show() afterwards to
+    # display the graph) cmap=cm.gray will ensure that the image is shown in grayscale: elements with values near 1 will be
+    # plotted as near-white pixels; elements near zero will be plotted as near-black pixels. aspect='auto' will expand the
+    # otherwise very long, flat image to fill the figure window. interpolation='nearest' will stop any blurring between the
+    # pixels.
+    genePlot.clf()
     genePlot.imshow(Genes, cmap=cm.gray, aspect='auto', interpolation='nearest')
     genePlot.show()
-    return fits
-
-
-def multiHillClimber(runs):
-    fits = MatrixCreate(runs, 5000)
-    for run in xrange(runs):
-        fits[run] = randomHillClimber()[0]
 
     return fits
 
@@ -106,31 +106,20 @@ def multiHillClimber(runs):
 # Create a function PlotVectorAsLine(fits) that plots the parent vector's fitness as a line (use plot() and show() from
 # matplotlib). The graph should show one line with a curve, similar to the one in Fig. 1a. Save this figure to your
 # computer.
-fits = multiHillClimber(5)
+def PlotVectorAsLine():
+    # Wrap the Python code from step 8 above in a loop that runs the hill climber five times, each time starting with a
+    # different random vector. At the end of each pass through the loop, add another line to your graph, so that you have a
+    # picture similar to that in Fig. 1b. Save this figure to your computer.
+    all_fits = MatrixCreate(5, 5000)
+    for i in xrange(5):
+        all_fits[i] = SerialHillClimber()
 
-
-def PlotVectorAsLine(fits):
-    for run in xrange(len(fits)):
-        fitnessPlot.plot(fits[run])
+    for i in xrange(4):
+        fitnessPlot.plot(all_fits[i])
 
     fitnessPlot.xlabel('Generation')
     fitnessPlot.ylabel('Fitness')
     fitnessPlot.show()
 
 
-# Wrap the Python code from step 8 above in a loop that runs the hill climber five times, each time starting with a
-# different random vector. At the end of each pass through the loop, add another line to your graph, so that you have a
-# picture similar to that in Fig. 1b. Save this figure to your computer.
-PlotVectorAsLine(fits)
-
-# Create a matrix Genes with 5000 columns and 50 rows. After each generation j of the hill climber, copy each element of
-# the parent vector into the jth column of Genes. After the hill climber has run, print Genes to ensure the elements
-# were stored correctly.
-
-# The matplotlib function imshow(M) will print a matrix M as an image, where each pixel pij corresponds to element eij
-# in M . Calling imshow(Genes, cmap=cm.gray, aspect='auto', interpolation='nearest') after the hill climber has
-# terminated will produce a figure similar to that of Fig. 1c. (Note that you still have to call show() afterwards to
-# display the graph) cmap=cm.gray will ensure that the image is shown in grayscale: elements with values near 1 will be
-# plotted as near-white pixels; elements near zero will be plotted as near-black pixels. aspect='auto' will expand the
-# otherwise very long, flat image to fill the figure window. interpolation='nearest' will stop any blurring between the
-# pixels.
+PlotVectorAsLine()
