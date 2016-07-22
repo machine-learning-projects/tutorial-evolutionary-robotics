@@ -29,6 +29,10 @@
 
 ########################################################################################################################
 
+# For first fitness, want neurons to alternate between on/off
+# For second fitness, want neurons to alternate between on/off at each time-step, and to be as different as possible
+# from their neighbors, giving a checkerboard pattern
+
 import random
 from copy import deepcopy
 
@@ -126,6 +130,8 @@ def MeanDistance(v1, v2):
 # creates an all-zero (numUpdates=)10 x (numNeurons=)10 matrix neuronValues like you did in the ANN project. Print the
 # matrix to make sure it is correct.
 
+# Want to converge with even/odd neurons alternating on/off
+
 # Returns the mean value of all of the elements in vector v
 def Fitness(v):
     neuronValues = MatrixCreate(numUpdates, numNeurons)
@@ -160,6 +166,10 @@ def Fitness(v):
 
 # 20. Now copy the Fitness function, rename it Fitness2, and change the two calls to Fitness in your main function to
 # calls to Fitness2.
+
+# More difficult: want to converge on neurons being as different from their neighbors as possible, and to alternate each
+# time-step
+
 # Returns the mean value of all of the elements in vector v
 def Fitness2(v):
     neuronValues = MatrixCreate(numUpdates, numNeurons)

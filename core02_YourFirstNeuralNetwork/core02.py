@@ -20,6 +20,8 @@
 
 ########################################################################################################################
 
+# Want to find influence that each neuron has on each other neuron
+
 import math
 import random
 
